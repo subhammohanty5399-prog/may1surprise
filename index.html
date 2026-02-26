@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Secret For You 💖</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin:0;
+    overflow:hidden;
+    font-family:'Poppins',sans-serif;
+    background: radial-gradient(circle at top, #ff9a9e, #fad0c4);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    color:white;
+    text-align:center;
+}
+
+.container {
+    position:relative;
+    z-index:10;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    padding:40px;
+    border-radius:20px;
+    width:90%;
+    max-width:420px;
+}
+
+h1 {
+    font-family:'Great Vibes',cursive;
+    font-size:38px;
+}
+
+#countdown {
+    margin:20px 0;
+    font-size:22px;
+}
+
+button {
+    padding:12px 25px;
+    border-radius:30px;
+    border:none;
+    background:white;
+    color:#e84393;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.letter {
+    margin-top:20px;
+    min-height:120px;
+    white-space:pre-line;
+}
+
+canvas {
+    position:fixed;
+    top:0;
+    left:0;
+    pointer-events:none;
+}
+
+.heart {
+    position:absolute;
+    font-size:20px;
+    animation: float 6s linear infinite;
+    opacity:0.7;
+}
+
+@keyframes float {
+    from {transform:translateY(100vh);}
+    to {transform:translateY(-10vh);}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="fireworks"></canvas>
+
+<div class="container">
+    <h1>For <span id="herName"></span> 💖</h1>
+    <div id="countdown"></div>
+    <button onclick="openLetter()">Open Your Letter 💌</button>
+    <div class="letter" id="letter"></div>
+</div>
+
+<audio id="bgMusic" loop>
+    <source src="Saiyaara - Barbaad Sad BGM.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const HER_NAME = "Jiggi";
+document.getElementById("herName").innerText = HER_NAME;
+
+const letterText = 
+`Dear ${HER_NAME},
+
+Every second brings us closer to your special day, 1st May.
+You deserve magic, happiness, and all the warmth in this world.
+
+I hope this birthday feels as beautiful as your smile.
+
+:Someone who secretly admires you 🤍`;
+
+function typeWriter(text, i = 0) {
+    if (i < text.length) {
+        document.getElementById("letter").innerHTML += text.charAt(i);
+        setTimeout(() => typeWriter(text, i + 1), 40);
+    }
+}
+
+function openLetter(){
+    const music = document.getElementById("bgMusic");
+    music.volume = 0;
+    music.play();
+    let fade = setInterval(()=>{
+        if(music.volume < 1){
+            music.volume += 0.02;
+        } else clearInterval(fade);
+    },100);
+
+    typeWriter(letterText);
+}
+
+/* COUNTDOWN */
+function updateCountdown(){
+    const now = new Date();
+    const year = now.getFullYear();
+    let birthday = new Date(year,4,1,0,0,0);
+    if(now > birthday) birthday = new Date(year+1,4,1,0,0,0);
+    const diff = birthday - now;
+
+    const d = Math.floor(diff/(1000*60*60*24));
+    const h = Math.floor((diff/(1000*60*60))%24);
+    const m = Math.floor((diff/(1000*60))%60);
+    const s = Math.floor((diff/1000)%60);
+
+    document.getElementById("countdown").innerHTML =
+    `🎂 ${d}d ${h}h ${m}m ${s}s`;
+
+   if(diff <= 1000){
+    launchFireworks();
+    setTimeout(launchNameFirework, 2500);
+}
+}
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+/* REAL FIREWORKS */
+const canvas = document.getElementById("fireworks");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+
+function launchFireworks(){
+    for(let i=0;i<5;i++){
+        setTimeout(()=>{
+            const x = Math.random()*canvas.width;
+            const y = Math.random()*canvas.height/2;
+            for(let j=0;j<80;j++){
+                particles.push({
+                    x:x,
+                    y:y,
+                    angle:Math.random()*2*Math.PI,
+                    speed:Math.random()*5+2,
+                    life:100
+                });
+            }
+        }, i*400);
+    }
+}
+function animate(){
+    requestAnimationFrame(animate);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    particles.forEach((p,index)=>{
+
+        if(p.forming){
+            const dx = p.targetX - p.x;
+            const dy = p.targetY - p.y;
+            p.x += dx * 0.05;
+            p.y += dy * 0.05;
+        } else {
+            p.x += Math.cos(p.angle)*p.speed;
+            p.y += Math.sin(p.angle)*p.speed;
+        }
+
+        p.life--;
+
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,2,0,Math.PI*2);
+        ctx.fillStyle=p.color || `hsl(${Math.random()*360},100%,60%)`;
+        ctx.fill();
+
+        if(p.life<=0) particles.splice(index,1);
+    });
+}
+
+/* 🔥 FIREWORKS FORM HER NAME */
+function launchNameFirework() {
+
+    const text = HER_NAME;
+    const offCanvas = document.createElement("canvas");
+    const offCtx = offCanvas.getContext("2d");
+
+    offCanvas.width = canvas.width;
+    offCanvas.height = canvas.height;
+
+    offCtx.fillStyle = "white";
+    offCtx.font = "bold 120px Poppins";
+    offCtx.textAlign = "center";
+    offCtx.fillText(text, offCanvas.width/2, offCanvas.height/2);
+
+    const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+    const data = imageData.data;
+
+    for (let y = 0; y < offCanvas.height; y += 6) {
+        for (let x = 0; x < offCanvas.width; x += 6) {
+            const index = (y * offCanvas.width + x) * 4;
+            if (data[index + 3] > 128) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height,
+                    targetX: x,
+                    targetY: y,
+                    speed: Math.random() * 4 + 2,
+                    life: 200,
+                    color: `hsl(${Math.random()*360},100%,60%)`,
+                    forming: true
+                });
+            }
+        }
+    }
+}
+animate();
+
+/* FLOATING HEARTS */
+function createHeart(){
+    const heart = document.createElement("div");
+    heart.className="heart";
+    heart.innerHTML="💖";
+    heart.style.left=Math.random()*100+"vw";
+    heart.style.fontSize=(Math.random()*20+15)+"px";
+    heart.style.animationDuration=(Math.random()*3+4)+"s";
+    document.body.appendChild(heart);
+    setTimeout(()=>heart.remove(),7000);
+}
+setInterval(createHeart,800);
+</script>
+
+</body>
+</html>
